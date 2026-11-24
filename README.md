@@ -224,7 +224,7 @@ Las interfaces se enlazan con sus implementaciones en `app/Providers/AppServiceP
 
 Archivo: [`postman/CartasSanta-EscenarioA.postman_collection.json`](postman/CartasSanta-EscenarioA.postman_collection.json).
 
-La importo en Postman y la corro completa con el **Runner** (de arriba hacia abajo), con la API y el mock levantados. Cada petición trae sus pruebas y hay un script común que verifica el formato de error en toda respuesta 4xx/5xx. En mi equipo pasan las 44 peticiones con 123 aserciones.
+La importo en Postman y la corro completa con el **Runner** (de arriba hacia abajo), con la API y el mock levantados. Cada petición trae sus pruebas y hay un script común que verifica el formato de error en toda respuesta 4xx/5xx. En mi equipo pasan las 44 peticiones con 124 aserciones.
 
 | Carpeta | Casos |
 |---|---|

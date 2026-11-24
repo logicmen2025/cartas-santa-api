@@ -392,7 +392,8 @@
                   "    pm.expect(j.data).to.be.an('array');",
                   "    pm.expect(j.meta.total).to.eql(j.data.length);",
                   "});",
-                  "pm.test('Extra A: ningún elemento expone la edad', () => j.data.forEach(c => pm.expect(c).to.not.have.property('edad')));"
+                  "pm.test('Extra A: ningún elemento expone la edad', () => j.data.forEach(c => pm.expect(c).to.not.have.property('edad')));",
+                  "pm.test('Extra A: solo inicial del apellido', () => j.data.forEach(c => pm.expect(c.remitente).to.match(/^\\S+( \\S\\.)?$/u)));"
                 ]
               }
             }
