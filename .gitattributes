@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+*.php diff=php
+*.md diff=markdown
+*.png binary
+*.pdf binary

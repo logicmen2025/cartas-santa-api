@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- WSDL del mock local. El docente entrega el suyo: de ahí se copian URL, namespace y soapAction al .env -->
+<definitions name="ListaBuenosTraviesosService"
+             targetNamespace="http://polonorte.beatlech/lista"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:pn="http://polonorte.beatlech/lista"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <types>
+    <xsd:schema targetNamespace="http://polonorte.beatlech/lista" elementFormDefault="qualified">
+      <xsd:element name="ConsultarComportamientoRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="nombre" type="xsd:string"/>
+            <xsd:element name="ciudad" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ConsultarComportamientoResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="resultado">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="BUENO"/>
+                  <xsd:enumeration value="TRAVIESO"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+
+  <message name="ConsultarComportamientoInput">
+    <part name="parameters" element="pn:ConsultarComportamientoRequest"/>
+  </message>
+  <message name="ConsultarComportamientoOutput">
+    <part name="parameters" element="pn:ConsultarComportamientoResponse"/>
+  </message>
+
+  <portType name="ListaBuenosTraviesosPortType">
+    <operation name="ConsultarComportamiento">
+      <input message="pn:ConsultarComportamientoInput"/>
+      <output message="pn:ConsultarComportamientoOutput"/>
+    </operation>
+  </portType>
+
+  <binding name="ListaBuenosTraviesosBinding" type="pn:ListaBuenosTraviesosPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="ConsultarComportamiento">
+      <soap:operation soapAction="ConsultarComportamiento"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+
+  <service name="ListaBuenosTraviesosService">
+    <port name="ListaBuenosTraviesosPort" binding="pn:ListaBuenosTraviesosBinding">
+      <soap:address location="{{URL_SERVICIO}}"/>
+    </port>
+  </service>
+</definitions>

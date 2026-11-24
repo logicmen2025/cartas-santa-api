@@ -1,0 +1,2247 @@
+{
+  "info": {
+    "_postman_id": "5861d321-4807-5ba5-9d97-dd29302ee3a4",
+    "name": "Cartas a Santa · Escenario A",
+    "description": "Colección de evidencias del Escenario A (Cartas a Santa).\n\nOrden recomendado: ejecutar la colección completa con el Runner, de arriba hacia abajo.\nAntes: API en {{baseUrl}} (php artisan serve) y SOAP arriba (composer mock-soap o mock del docente).\n\nCubre 200/201, 400, 401, 403, 404, 409, 422 y 503 (SOAP caído). Un script común valida que todo error tenga el formato {codigo, mensaje, detalles, timestamp, ruta}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 · Autenticación",
+      "description": "Obtiene los tokens que usan las demás carpetas. Ejecútala primero.",
+      "item": [
+        {
+          "name": "Login ELFO_JEFE (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailJefe}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json().data;",
+                  "pm.test('Devuelve token Bearer con rol ELFO_JEFE', () => {",
+                  "    pm.expect(d.token).to.be.a('string');",
+                  "    pm.expect(d.usuario.rol).to.eql('ELFO_JEFE');",
+                  "});",
+                  "pm.collectionVariables.set('tokenJefe', d.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login ELFO (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailElfo}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const d = pm.response.json().data;",
+                  "pm.test('Rol ELFO', () => pm.expect(d.usuario.rol).to.eql('ELFO'));",
+                  "pm.collectionVariables.set('tokenElfo', d.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con contraseña incorrecta (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailJefe}}\",\n  \"password\": \"no-es-la-clave\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('codigo = CREDENCIALES_INVALIDAS', () => pm.expect(pm.response.json().codigo).to.eql('CREDENCIALES_INVALIDAS'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 · Creación y consulta (201 / 200)",
+      "description": "Endpoints públicos.",
+      "item": [
+        {
+          "name": "Crear carta válida (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"Muñeca de trapo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('Nace RECIBIDA y sin comportamiento', () => {",
+                  "    pm.expect(c.estado).to.eql('RECIBIDA');",
+                  "    pm.expect(c.comportamiento).to.eql(null);",
+                  "    pm.expect(c.fechaRecepcion).to.match(/Z$/);",
+                  "});",
+                  "pm.test('Header Location', () => pm.response.to.have.header('Location'));",
+                  "pm.collectionVariables.set('cartaId', c.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear enviando estado=ENTREGADA → igual nace RECIBIDA (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "description": "Regla 2: el cliente no puede fijar estado ni comportamiento.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Mateo Andrade\",\n  \"edad\": 10,\n  \"ciudad\": \"Quito\",\n  \"regalos\": [\n    \"Telescopio\"\n  ],\n  \"estado\": \"ENTREGADA\",\n  \"comportamiento\": \"BUENO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('Regla 2: estado RECIBIDA', () => pm.expect(c.estado).to.eql('RECIBIDA'));",
+                  "pm.test('comportamiento lo llena el sistema', () => pm.expect(c.comportamiento).to.eql(null));",
+                  "pm.collectionVariables.set('cartaEditableId', c.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver detalle público (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('Extra A: solo inicial del apellido', () => pm.expect(c.remitente).to.eql('Valentina P.'));",
+                  "pm.test('Extra A: no muestra la edad', () => pm.expect(c).to.not.have.property('edad'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver detalle con token ELFO_JEFE (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('El jefe ve nombre completo y edad', () => {",
+                  "    pm.expect(c.remitente).to.eql('Valentina Pérez');",
+                  "    pm.expect(c.edad).to.eql(7);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar cartas (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const j = pm.response.json();",
+                  "pm.test('data es una lista y meta.total coincide', () => {",
+                  "    pm.expect(j.data).to.be.an('array');",
+                  "    pm.expect(j.meta.total).to.eql(j.data.length);",
+                  "});",
+                  "pm.test('Extra A: ningún elemento expone la edad', () => j.data.forEach(c => pm.expect(c).to.not.have.property('edad')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar con filtros estado y ciudad (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas?estado=RECIBIDA&ciudad=guayaquil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "RECIBIDA"
+                },
+                {
+                  "key": "ciudad",
+                  "value": "guayaquil"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const j = pm.response.json();",
+                  "pm.test('Todas cumplen el filtro', () => j.data.forEach(c => {",
+                  "    pm.expect(c.estado).to.eql('RECIBIDA');",
+                  "    pm.expect(c.ciudad.toLowerCase()).to.eql('guayaquil');",
+                  "}));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Entrada inválida (400)",
+      "description": "Validación de formato. Todas responden 400 con detalle por campo.",
+      "item": [
+        {
+          "name": "Crear sin campos obligatorios (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));",
+                  "",
+                  "const campos = pm.response.json().detalles.map(d => d.campo);",
+                  "pm.test('Reporta los 4 campos obligatorios', () => pm.expect(campos).to.include.members(['remitente', 'edad', 'ciudad', 'regalos']));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edad fuera de rango (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 18,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"Muñeca de trapo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));",
+                  "",
+                  "pm.test('Señala el campo edad', () => pm.expect(pm.response.json().detalles.map(d => d.campo)).to.include('edad'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Regalos duplicados (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"bicicleta\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Más de 5 regalos (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Uno\",\n    \"Dos\",\n    \"Tres\",\n    \"Cuatro\",\n    \"Cinco\",\n    \"Seis\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remitente de 1 carácter (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"V\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"Muñeca de trapo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON malformado (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Ana\",\n  \"edad\": \n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = JSON_MALFORMADO', () => pm.expect(pm.response.json().codigo).to.eql('JSON_MALFORMADO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro de estado inválido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas?estado=PERDIDA",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PERDIDA"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar a un estado que no existe (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"VOLANDO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDACION_FALLIDA', () => pm.expect(pm.response.json().codigo).to.eql('VALIDACION_FALLIDA'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · Recurso inexistente (404)",
+      "description": "",
+      "item": [
+        {
+          "name": "Ver carta inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/123456",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "123456"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('codigo = CARTA_NO_ENCONTRADA', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_NO_ENCONTRADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar carta inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/123456",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "123456"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"Muñeca de trapo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('codigo = CARTA_NO_ENCONTRADA', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_NO_ENCONTRADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar estado de carta inexistente (404)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/123456/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "123456",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('codigo = CARTA_NO_ENCONTRADA', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_NO_ENCONTRADA'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 · Seguridad (401 / 403)",
+      "description": "DELETE y PATCH /estado exigen rol ELFO_JEFE.",
+      "item": [
+        {
+          "name": "Eliminar sin token (401)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('codigo = TOKEN_REQUERIDO', () => pm.expect(pm.response.json().codigo).to.eql('TOKEN_REQUERIDO'));",
+                  "pm.test('Header WWW-Authenticate', () => pm.response.to.have.header('WWW-Authenticate'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar estado sin token (401)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('codigo = TOKEN_REQUERIDO', () => pm.expect(pm.response.json().codigo).to.eql('TOKEN_REQUERIDO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token inválido (401)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer token.que.no.sirve"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('codigo = TOKEN_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('TOKEN_INVALIDO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar con rol ELFO (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenElfo}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('codigo = ROL_INSUFICIENTE', () => pm.expect(pm.response.json().codigo).to.eql('ROL_INSUFICIENTE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar estado con rol ELFO (403)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenElfo}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('codigo = ROL_INSUFICIENTE', () => pm.expect(pm.response.json().codigo).to.eql('ROL_INSUFICIENTE'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 · Transiciones y reglas 3, 4 y 5 (200 / 409)",
+      "description": "Requiere el servicio SOAP arriba (mock local o del docente).",
+      "item": [
+        {
+          "name": "RECIBIDA → EN_PRODUCCION no permitido (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_PRODUCCION\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = TRANSICION_INVALIDA', () => pm.expect(pm.response.json().codigo).to.eql('TRANSICION_INVALIDA'));",
+                  "",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('No se puede pasar de RECIBIDA a EN_PRODUCCION'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "RECIBIDA → APROBADA consulta el SOAP: BUENO (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "description": "Regla 4: antes de aprobar se consulta ListaBuenosTraviesosService.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('APROBADA con comportamiento BUENO', () => {",
+                  "    pm.expect(c.estado).to.eql('APROBADA');",
+                  "    pm.expect(c.comportamiento).to.eql('BUENO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar carta APROBADA (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"Muñeca de trapo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = CARTA_NO_EDITABLE', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_NO_EDITABLE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "APROBADA → EN_PRODUCCION (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_PRODUCCION\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('EN_PRODUCCION', () => pm.expect(pm.response.json().data.estado).to.eql('EN_PRODUCCION'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EN_PRODUCCION → ENTREGADA (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ENTREGADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ENTREGADA', () => pm.expect(pm.response.json().data.estado).to.eql('ENTREGADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ENTREGADA → RECIBIDA (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"RECIBIDA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = TRANSICION_INVALIDA', () => pm.expect(pm.response.json().codigo).to.eql('TRANSICION_INVALIDA'));",
+                  "",
+                  "pm.test('Mismo mensaje del enunciado', () => pm.expect(pm.response.json().mensaje).to.eql('No se puede pasar de ENTREGADA a RECIBIDA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar carta ENTREGADA (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Valentina Pérez\",\n  \"edad\": 7,\n  \"ciudad\": \"Guayaquil\",\n  \"regalos\": [\n    \"Bicicleta\",\n    \"Muñeca de trapo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = CARTA_ENTREGADA', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_ENTREGADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar carta ENTREGADA (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = CARTA_ENTREGADA', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_ENTREGADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear carta de un remitente travieso (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Pedro Travieso\",\n  \"edad\": 9,\n  \"ciudad\": \"Manta\",\n  \"regalos\": [\n    \"Resortera\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('cartaTraviesaId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar carta traviesa → queda RECHAZADA (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaTraviesaId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaTraviesaId}}",
+                "estado"
+              ]
+            },
+            "description": "Con el mock local, cualquier nombre que contenga 'travies' responde TRAVIESO. Con el mock del docente depende de su lista.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('Regla 4: si es TRAVIESO pasa a RECHAZADA (no a APROBADA)', () => {",
+                  "    if (c.comportamiento === 'TRAVIESO') { pm.expect(c.estado).to.eql('RECHAZADA'); }",
+                  "    else { pm.expect(c.estado).to.eql('APROBADA'); }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 · Edición y eliminación (200 / 204)",
+      "description": "",
+      "item": [
+        {
+          "name": "Editar carta RECIBIDA (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaEditableId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaEditableId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Mateo Andrade\",\n  \"edad\": 11,\n  \"ciudad\": \"Quito\",\n  \"regalos\": [\n    \"Telescopio\",\n    \"Mapa de estrellas\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('Se guardaron los cambios', () => {",
+                  "    pm.expect(c.edad).to.eql(11);",
+                  "    pm.expect(c.regalos).to.eql(['Telescopio', 'Mapa de estrellas']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar carta como ELFO_JEFE (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaEditableId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaEditableId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver carta eliminada (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaEditableId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaEditableId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('codigo = CARTA_NO_ENCONTRADA', () => pm.expect(pm.response.json().codigo).to.eql('CARTA_NO_ENCONTRADA'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 · Regla de negocio violada (422)",
+      "description": "Regla 1. Como hoy no es 25 de diciembre, se usa el header X-Fecha-Simulada (solo funciona con PERMITIR_FECHA_SIMULADA=true y APP_ENV distinto de production).",
+      "item": [
+        {
+          "name": "Crear carta el 25 de diciembre (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Fecha-Simulada",
+                "value": "2026-12-25T09:00:00-05:00"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Lucía Tardía\",\n  \"edad\": 6,\n  \"ciudad\": \"Cuenca\",\n  \"regalos\": [\n    \"Tren de madera\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 422', () => pm.response.to.have.status(422));",
+                  "pm.test('codigo = FUERA_DE_PLAZO', () => pm.expect(pm.response.json().codigo).to.eql('FUERA_DE_PLAZO'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 · Servicio SOAP caído (503)",
+      "description": "El nombre Grinch provoca un soap:Fault (mock del docente y mock local). La carta debe quedar RECIBIDA con PENDIENTE_VERIFICACION.",
+      "item": [
+        {
+          "name": "Crear carta de Grinch (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Grinch\",\n  \"edad\": 9,\n  \"ciudad\": \"Villa Quién\",\n  \"regalos\": [\n    \"Carbón\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('cartaGrinchId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar Grinch → el SOAP responde Fault (503)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaGrinchId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaGrinchId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 503', () => pm.response.to.have.status(503));",
+                  "pm.test('codigo = SERVICIO_EXTERNO_NO_DISPONIBLE', () => pm.expect(pm.response.json().codigo).to.eql('SERVICIO_EXTERNO_NO_DISPONIBLE'));",
+                  "",
+                  "const d = pm.response.json().detalles[0];",
+                  "pm.test('Detalle del fallo: carta RECIBIDA y PENDIENTE_VERIFICACION', () => {",
+                  "    pm.expect(d.servicio).to.eql('ListaBuenosTraviesosService');",
+                  "    pm.expect(d.estadoCarta).to.eql('RECIBIDA');",
+                  "    pm.expect(d.comportamiento).to.eql('PENDIENTE_VERIFICACION');",
+                  "});",
+                  "pm.test('Nunca 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grinch sigue RECIBIDA con PENDIENTE_VERIFICACION (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaGrinchId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaGrinchId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const c = pm.response.json().data;",
+                  "pm.test('Estado sin cambios y comportamiento pendiente', () => {",
+                  "    pm.expect(c.estado).to.eql('RECIBIDA');",
+                  "    pm.expect(c.comportamiento).to.eql('PENDIENTE_VERIFICACION');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 · Timeout de 3 s del escenario A (solo mock local)",
+      "description": "El mock local tarda 4 s cuando el nombre es Krampus. La API corta a los 3 s y responde 503. Con el mock del docente esta carpeta no aplica (Krampus sería BUENO).",
+      "item": [
+        {
+          "name": "Crear carta de Krampus (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remitente\": \"Krampus\",\n  \"edad\": 12,\n  \"ciudad\": \"Salzburgo\",\n  \"regalos\": [\n    \"Cadenas\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('cartaKrampusId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar Krampus → el SOAP no responde en 3 s (503)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenJefe}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cartas/{{cartaKrampusId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cartas",
+                "{{cartaKrampusId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"APROBADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 503', () => pm.response.to.have.status(503));",
+                  "pm.test('codigo = SERVICIO_EXTERNO_NO_DISPONIBLE', () => pm.expect(pm.response.json().codigo).to.eql('SERVICIO_EXTERNO_NO_DISPONIBLE'));",
+                  "",
+                  "pm.test('Motivo TIMEOUT', () => pm.expect(pm.response.json().detalles[0].motivo).to.eql('TIMEOUT'));",
+                  "pm.test('Cortó cerca de los 3 s', () => pm.expect(pm.response.responseTime).to.be.within(2500, 4500));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Verificación común: todo error usa el formato único",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('Formato de error estándar', function () {",
+          "        const j = pm.response.json();",
+          "        pm.expect(Object.keys(j)).to.eql(['codigo', 'mensaje', 'detalles', 'timestamp', 'ruta']);",
+          "        pm.expect(j.detalles).to.be.an('array');",
+          "        pm.expect(j.timestamp).to.match(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$/);",
+          "        pm.expect(j.ruta).to.match(/^\\/api\\//);",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "emailJefe",
+      "value": "jefe@polonorte.test"
+    },
+    {
+      "key": "emailElfo",
+      "value": "elfo@polonorte.test"
+    },
+    {
+      "key": "password",
+      "value": "Navidad2026"
+    },
+    {
+      "key": "tokenJefe",
+      "value": ""
+    },
+    {
+      "key": "tokenElfo",
+      "value": ""
+    },
+    {
+      "key": "cartaId",
+      "value": ""
+    },
+    {
+      "key": "cartaEditableId",
+      "value": ""
+    },
+    {
+      "key": "cartaTraviesaId",
+      "value": ""
+    },
+    {
+      "key": "cartaGrinchId",
+      "value": ""
+    },
+    {
+      "key": "cartaKrampusId",
+      "value": ""
+    }
+  ]
+}
